@@ -20,6 +20,9 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
     public let headRefName: String?
     /// The PR's base (target) branch name, if known.
     public let baseRefName: String?
+    /// Whether the PR is a draft. Free from the REST list payload — no extra
+    /// request — and orthogonal to `state`, which stays `OPEN` for drafts.
+    public let isDraft: Bool
 
     /// Creates a probe item.
     public init(
@@ -29,7 +32,8 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
         updatedAt: String?,
         mergedAt: String? = nil,
         headRefName: String? = nil,
-        baseRefName: String? = nil
+        baseRefName: String? = nil,
+        isDraft: Bool = false
     ) {
         self.number = number
         self.state = state
@@ -38,5 +42,6 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
         self.mergedAt = mergedAt
         self.headRefName = headRefName
         self.baseRefName = baseRefName
+        self.isDraft = isDraft
     }
 }

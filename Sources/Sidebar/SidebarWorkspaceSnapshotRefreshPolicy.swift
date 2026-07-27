@@ -6,6 +6,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
         let customColorHex: String?
         let finderDirectoryPath: String?
         let mediaActivity: BrowserMediaActivity
+        let agentStatusState: SidebarAgentStatusState?
     }
 
     var contextMenuImmediateFields: ContextMenuImmediateFields {
@@ -15,7 +16,8 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             isPinned: isPinned,
             customColorHex: customColorHex,
             finderDirectoryPath: finderDirectoryPath,
-            mediaActivity: mediaActivity
+            mediaActivity: mediaActivity,
+            agentStatusState: agentStatusState
         )
     }
 
@@ -33,6 +35,10 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             showsRemoteReconnectAffordance: showsRemoteReconnectAffordance,
             copyableSidebarSSHError: copyableSidebarSSHError,
             latestConversationMessage: latestConversationMessage,
+            // Same reasoning as `mediaActivity` below: this is a leading row
+            // glyph, so a stale value while the menu is open is visually worse
+            // than stale telemetry text.
+            agentStatusState: snapshot.agentStatusState,
             metadataEntries: metadataEntries,
             metadataBlocks: metadataBlocks,
             latestLog: latestLog,

@@ -103,6 +103,37 @@ import Testing
         #expect(decision.pendingWorkspaceSnapshot == next)
         #expect(decision.hasDeferredWorkspaceObservationInvalidation)
     }
+    @Test func contextMenuAgentStatusChangeUpdatesDisplayedGlyphImmediately() {
+        let current = Self.snapshot(
+            remoteConnectionStatusText: "Connected",
+            latestConversationMessage: "old message",
+            listeningPorts: [3000],
+            agentStatusState: .working
+        )
+        let next = Self.snapshot(
+            remoteConnectionStatusText: "Disconnected",
+            latestConversationMessage: "new message",
+            listeningPorts: [3000, 4000],
+            agentStatusState: .needsAttention
+        )
+
+        let decision = SidebarWorkspaceSnapshotRefreshPolicy().decision(
+            current: current,
+            next: next,
+            force: false,
+            contextMenuVisible: true
+        )
+
+        #expect(
+            decision.workspaceSnapshotStorage?.agentStatusState == .needsAttention,
+            "An agent asking for input while a context menu is open must light the glyph immediately; it is the row's primary affordance, not deferrable telemetry."
+        )
+        #expect(decision.workspaceSnapshotStorage?.remoteConnectionStatusText == "Connected")
+        #expect(decision.workspaceSnapshotStorage?.latestConversationMessage == "old message")
+        #expect(decision.workspaceSnapshotStorage?.listeningPorts == [3000])
+        #expect(decision.pendingWorkspaceSnapshot == next)
+        #expect(decision.hasDeferredWorkspaceObservationInvalidation)
+    }
     @Test func closedContextMenuStoresNextAndClearsPending() {
         let current = Self.snapshot(title: "old", isPinned: false)
         let next = Self.snapshot(title: "new", isPinned: true)
@@ -129,7 +160,8 @@ import Testing
         latestConversationMessage: String? = nil,
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
-        mediaActivity: BrowserMediaActivity = BrowserMediaActivity()
+        mediaActivity: BrowserMediaActivity = BrowserMediaActivity(),
+        agentStatusState: SidebarAgentStatusState? = nil
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: presentationKey ?? Self.presentationKey(),
@@ -143,6 +175,7 @@ import Testing
             showsRemoteReconnectAffordance: false,
             copyableSidebarSSHError: nil,
             latestConversationMessage: latestConversationMessage,
+            agentStatusState: agentStatusState,
             metadataEntries: [],
             metadataBlocks: [],
             latestLog: nil,

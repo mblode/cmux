@@ -154,6 +154,57 @@ import Testing
         #expect(items[1].url == "https://github.com/manaflow-ai/cmux/pull/5293")
     }
 
+    @Test func decodesDraftFromTheListPayloadAndDefaultsWhenAbsent() throws {
+        // `draft` rides along on the `pulls` list response cmux already fetches,
+        // so the draft affordance costs no extra request. It stays optional
+        // because non-GitHub hosts and older fixtures omit the key entirely.
+        let json = """
+        [
+          {
+            "number": 1,
+            "state": "open",
+            "html_url": "https://github.com/o/r/pull/1",
+            "updated_at": "2026-06-03T10:00:00Z",
+            "merged_at": null,
+            "draft": true,
+            "head": {"ref": "feat/draft"},
+            "base": {"ref": "main"}
+          },
+          {
+            "number": 2,
+            "state": "open",
+            "html_url": "https://github.com/o/r/pull/2",
+            "updated_at": "2026-06-03T11:00:00Z",
+            "merged_at": null,
+            "draft": false,
+            "head": {"ref": "feat/ready"},
+            "base": {"ref": "main"}
+          },
+          {
+            "number": 3,
+            "state": "open",
+            "html_url": "https://github.com/o/r/pull/3",
+            "updated_at": "2026-06-03T12:00:00Z",
+            "merged_at": null,
+            "head": {"ref": "feat/no-draft-key"},
+            "base": {"ref": "main"}
+          }
+        ]
+        """
+        let rest = try #require(
+            PullRequestProbeService.decodeJSON([WorkspacePullRequestRESTItem].self, from: Data(json.utf8))
+        )
+        let items = rest.map(PullRequestProbeService.probeItem)
+
+        #expect(items.count == 3, "A payload missing `draft` must still decode, not drop the item.")
+        #expect(items[0].isDraft)
+        #expect(!items[1].isDraft)
+        #expect(!items[2].isDraft)
+
+        // Draft is orthogonal to state: GitHub reports drafts as `open`.
+        #expect(PullRequestStatus(githubState: items[0].state) == .open)
+    }
+
     @Test func branchEndpointEncodesHeadFilterAndRejectsMalformedSlugs() throws {
         let endpoint = try #require(
             PullRequestProbeService.branchEndpoint(repoSlug: "manaflow-ai/cmux", branch: "feat/x")

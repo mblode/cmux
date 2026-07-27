@@ -13151,7 +13151,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let number: Int
         let label: String
         let url: URL
-        let status: SidebarPullRequestStatus
+        let presentation: SidebarPullRequestPresentation
         let isStale: Bool
     }
 
@@ -13167,6 +13167,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let showsRemoteReconnectAffordance: Bool
         let copyableSidebarSSHError: String?
         let latestConversationMessage: String?
+        let agentStatusState: SidebarAgentStatusState?
         let metadataEntries: [SidebarStatusEntry]
         let metadataBlocks: [SidebarMetadataBlock]
         let latestLog: SidebarLogEntry?
@@ -13694,23 +13695,38 @@ struct TabItemView: View, Equatable {
 
         let rowView = VStack(alignment: .leading, spacing: SidebarWorkspaceListMetrics.rowContentSpacing) {
             HStack(alignment: .top, spacing: 8) {
-                // Linear-style leading status dot: one semantic dot carries the
-                // state, ranked by urgency (error > needs-input > running >
-                // idle > done) so an error is never masked by "running". Kept
-                // as the first element so the dot anchors the row's leading edge
+                // Linear-style leading status glyph: one shape carries the
+                // state, ranked by urgency (error > needs-attention > working >
+                // idle > done) so an error is never masked by "working". Kept
+                // as the first element so it anchors the row's leading edge
                 // regardless of pin / media / unread — focusing a row clears its
                 // unread count, which used to sit before the dot and shift it.
-                if let statusColor = SidebarStatusStyle.rankedDotColor(
-                    forEntries: workspaceSnapshot.metadataEntries.map { (key: $0.key, value: $0.value) },
-                    colorScheme: colorScheme
-                ) {
-                    Circle()
-                        .fill(Color(nsColor: statusColor))
-                        .frame(width: scaledFontSize(7), height: scaledFontSize(7))
-                        .padding(.top, scaledFontSize(4))
-                        .padding(.trailing, 1)
-                        .accessibilityHidden(true)
+                //
+                // The footprint is reserved even with no status so titles align
+                // across every row and an agent coming online doesn't re-truncate
+                // the title next to it. Crucially the box is identical in all
+                // states, so a transition can never change the row's height —
+                // see the animation prohibition further down this body.
+                let agentStatusMetrics = SidebarAgentStatusGlyphMetrics.metrics(
+                    for: workspaceSnapshot.agentStatusState,
+                    fontScale: fontScale
+                )
+                Group {
+                    if let agentStatusState = workspaceSnapshot.agentStatusState {
+                        SidebarAgentStatusGlyph(
+                            state: agentStatusState,
+                            metrics: agentStatusMetrics,
+                            color: agentStatusGlyphColor(for: agentStatusState),
+                            label: agentStatusState.localizedLabel
+                        )
+                    } else {
+                        Color.clear
+                            .frame(width: agentStatusMetrics.side, height: agentStatusMetrics.side)
+                            .accessibilityHidden(true)
+                    }
                 }
+                .padding(.top, agentStatusMetrics.topPadding)
+                .padding(.trailing, agentStatusMetrics.trailingPadding)
 
                 if workspaceSnapshot.isPinned {
                     BlodeIconImage(name: "BlodePin", size: scaledFontSize(10))
@@ -14003,30 +14019,23 @@ struct TabItemView: View, Equatable {
             if detailVisibility.showsPullRequests, !workspaceSnapshot.pullRequestRows.isEmpty {
                 VStack(alignment: .leading, spacing: 1) {
                     ForEach(workspaceSnapshot.pullRequestRows) { pullRequest in
-                        let pullRequestNumber = String(pullRequest.number)
-                        let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber)"
-                        // Linear-quiet PR row: blode pull-request glyph + "#N",
-                        // no underline and no status word — the tooltip and
-                        // click-through carry the rest.
-                        let rowContent = HStack(spacing: 5) {
-                            BlodeIconImage(name: "BlodeGitPullRequest", size: scaledFontSize(11))
-                            Text("#\(pullRequestNumber)").lineLimit(1).truncationMode(.tail)
-                            Spacer(minLength: 0)
-                        }
-                        .font(magnifiedFont(scaledFontSize(11), weight: .medium))
-                        .foregroundColor(pullRequestForegroundColor)
-                        .opacity(pullRequest.isStale ? 0.5 : 1)
-                        if settings.makesPullRequestsClickable {
-                            Button(action: { openPullRequestLink(pullRequest.url) }) { rowContent }
-                                .buttonStyle(.plain)
-                                .cmuxHoverUnderline()
-                                .cmuxPointingHandCursor()
-                                .tint(pullRequestForegroundColor)
-                                .safeHelp(String(localized: "sidebar.pullRequest.openTooltip", defaultValue: "Open \(pullRequestTitle)"))
-                                .accessibilityIdentifier("SidebarPullRequestRow")
-                        } else {
-                            rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarPullRequestRow")
-                        }
+                        // Linear-quiet PR row: a state-specific glyph + "#N", no
+                        // underline and no inline status word — GitHub's own
+                        // colour vocabulary carries the state at a glance and the
+                        // tooltip spells it out.
+                        SidebarPullRequestRowView(
+                            number: pullRequest.number,
+                            label: pullRequest.label,
+                            url: pullRequest.url,
+                            presentation: pullRequest.presentation,
+                            isStale: pullRequest.isStale,
+                            isClickable: settings.makesPullRequestsClickable,
+                            fontSize: scaledFontSize(11),
+                            font: magnifiedFont(scaledFontSize(11), weight: .medium),
+                            color: pullRequestGlyphColor(for: pullRequest.presentation),
+                            openLink: { openPullRequestLink($0) }
+                        )
+                        .equatable()
                     }
                 }
             }
@@ -14863,6 +14872,9 @@ struct TabItemView: View, Equatable {
             guard detailVisibility.showsPullRequests, let orderedPanelIds else { return [] }
             return pullRequestDisplays(orderedPanelIds: orderedPanelIds)
         }()
+        // Sorted once and shared: the glyph resolver needs the entries even when
+        // the metadata pills are hidden, and this runs on every agent tick.
+        let statusEntries = tab.sidebarStatusEntriesInDisplayOrder()
 
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
@@ -14877,7 +14889,15 @@ struct TabItemView: View, Equatable {
                 && (tab.remoteConnectionState == .suspended || tab.remoteConnectionState == .disconnected),
             copyableSidebarSSHError: copyableSidebarSSHError,
             latestConversationMessage: tab.latestConversationMessage,
-            metadataEntries: detailVisibility.showsMetadata ? tab.sidebarStatusEntriesInDisplayOrder() : [],
+            // Resolved from the full status-entry list, not `metadataEntries`
+            // below: the glyph is a primary row affordance and must survive
+            // "hide auxiliary details", unlike the metadata pills it used to
+            // piggyback on.
+            agentStatusState: SidebarAgentStatusResolver.state(
+                lifecycleStatesByPanelId: tab.agentLifecycleStatesByPanelId,
+                statusEntries: statusEntries.map { (key: $0.key, value: $0.value) }
+            ),
+            metadataEntries: detailVisibility.showsMetadata ? statusEntries : [],
             metadataBlocks: detailVisibility.showsMetadata ? tab.sidebarMetadataBlocksInDisplayOrder() : [],
             latestLog: detailVisibility.showsLog ? tab.logEntries.last : nil,
             progress: detailVisibility.showsProgress ? tab.progress : nil,
@@ -15030,14 +15050,31 @@ struct TabItemView: View, Equatable {
                 number: pullRequest.number,
                 label: pullRequest.label,
                 url: pullRequest.url,
-                status: pullRequest.status,
+                presentation: SidebarPullRequestPresentation.resolve(
+                    status: pullRequest.status,
+                    isDraft: pullRequest.isDraft
+                ),
                 isStale: pullRequest.isStale
             )
         }
     }
 
-    private var pullRequestForegroundColor: Color {
-        isActive ? activeSecondaryColor(0.75) : .secondary
+    /// Semantic status colours are dropped on a solid-fill selected row, where
+    /// the background is the accent and white-on-accent is the only legible
+    /// foreground. This costs nothing in meaning: both glyph families encode
+    /// their state in the shape, so one row rendered monochrome still reads.
+    private func agentStatusGlyphColor(for state: SidebarAgentStatusState) -> NSColor {
+        guard !usesInvertedActiveForeground else {
+            return selectedWorkspaceForegroundNSColor(opacity: 0.9)
+        }
+        return SidebarStatusStyle.color(for: state, colorScheme: colorScheme)
+    }
+
+    private func pullRequestGlyphColor(for presentation: SidebarPullRequestPresentation) -> NSColor {
+        guard !usesInvertedActiveForeground else {
+            return selectedWorkspaceForegroundNSColor(opacity: 0.75)
+        }
+        return SidebarPullRequestPalette.color(for: presentation, colorScheme: colorScheme)
     }
 
     private func openPullRequestLink(_ url: URL) {

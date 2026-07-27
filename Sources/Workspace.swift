@@ -4879,7 +4879,8 @@ final class Workspace: Identifiable, ObservableObject {
         url: URL,
         status: SidebarPullRequestStatus,
         branch: String? = nil,
-        isStale: Bool = false
+        isStale: Bool = false,
+        isDraft: Bool = false
     ) {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
@@ -4895,7 +4896,11 @@ final class Workspace: Identifiable, ObservableObject {
                   existing.number == number,
                   existing.label == label,
                   existing.url == url,
-                  existing.status == status else {
+                  existing.status == status,
+                  // `isDraft` participates in the identity check: a draft being
+                  // marked ready-for-review is the same PR, and dropping the
+                  // carried branch on that flip would blank the row's branch.
+                  existing.isDraft == isDraft else {
                 return nil
             }
             return existing.branch
@@ -4906,7 +4911,8 @@ final class Workspace: Identifiable, ObservableObject {
             url: url,
             status: status,
             branch: resolvedBranch,
-            isStale: isStale
+            isStale: isStale,
+            isDraft: isDraft
         )
         if existing != state {
             panelPullRequests[panelId] = state

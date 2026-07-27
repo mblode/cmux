@@ -6,6 +6,10 @@ final class GPUSpinnerNSView: NSView {
     private static let spokeCount = 8
     private static let cycleDuration: CFTimeInterval = 0.8
     private static let arcDuration: CFTimeInterval = 0.9
+    /// One full breathe (out and back). Deliberately far slower than the
+    /// spinner cadences: this marks a persistent blocking state, not a wait.
+    private static let attentionPulseDuration: CFTimeInterval = 1.6
+    private static let attentionPulseMinimumOpacity: Float = 0.45
 
     private let contentLayer = CALayer()
     private var spokeLayers: [CALayer] = []
@@ -54,6 +58,8 @@ final class GPUSpinnerNSView: NSView {
             layoutSpokes()
         case .arc:
             layoutArc()
+        case let .attentionPulse(symbolName):
+            layoutAttentionPulse(symbolName: symbolName)
         }
     }
 
@@ -94,13 +100,46 @@ final class GPUSpinnerNSView: NSView {
         )
     }
 
+    /// Rasterizes the tinted symbol straight into `contentLayer.contents` so the
+    /// only animated property stays `opacity` on a single layer.
+    private func layoutAttentionPulse(symbolName: String) {
+        let side = min(bounds.width, bounds.height)
+        guard side > 0 else { return }
+        contentLayer.frame = bounds
+        contentLayer.contentsGravity = .resizeAspect
+        contentLayer.contentsScale = window?.backingScaleFactor ?? 2
+
+        let configuration = NSImage.SymbolConfiguration(pointSize: side, weight: .regular)
+        guard let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(configuration) else {
+            contentLayer.contents = nil
+            return
+        }
+        var tint = color
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            tint = color.usingColorSpace(.deviceRGB) ?? color
+        }
+        let tinted = NSImage(size: symbol.size, flipped: false) { rect in
+            symbol.draw(in: rect)
+            tint.set()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
+        tinted.isTemplate = false
+        contentLayer.contents = tinted
+    }
+
     private func rebuildLayers() {
         contentLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
         spokeLayers.removeAll()
         arcLayer.removeFromSuperlayer()
         contentLayer.removeAnimation(forKey: Self.animationKey)
+        contentLayer.contents = nil
 
         switch style {
+        case .attentionPulse:
+            // Content is the rasterized symbol itself; no sublayers.
+            break
         case .macOSSpokes:
             for index in 0..<Self.spokeCount {
                 let spoke = CALayer()
@@ -134,12 +173,18 @@ final class GPUSpinnerNSView: NSView {
             }
         case .arc:
             arcLayer.strokeColor = cg
+        case let .attentionPulse(symbolName):
+            // The tint is baked into the rasterized symbol, so a colour change
+            // means re-rendering it rather than reassigning a layer property.
+            layoutAttentionPulse(symbolName: symbolName)
         }
     }
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         observeWindowOcclusion()
+        // Re-render: `.attentionPulse` rasterizes at the window's backing scale.
+        layoutContent()
         updateAnimationState()
     }
 
@@ -174,6 +219,11 @@ final class GPUSpinnerNSView: NSView {
         applyColor()
     }
 
+    /// Reduce Motion removes the animation rather than substituting a fade, which
+    /// is the intended accessible fallback: `contentLayer.opacity` stays at its
+    /// model value of 1, so a paused `.attentionPulse` renders as a fully opaque
+    /// static glyph — never frozen mid-breathe and never invisible. Do not
+    /// "improve" this into a slow fade or a dimmed resting state.
     private var shouldAnimate: Bool {
         guard let window else { return false }
         guard window.occlusionState.contains(.visible) else { return false }
@@ -223,6 +273,18 @@ final class GPUSpinnerNSView: NSView {
             animation.timingFunction = CAMediaTimingFunction(name: .linear)
             animation.isRemovedOnCompletion = false
             animation.beginTime = syncedBeginTime(duration: Self.arcDuration)
+            contentLayer.add(animation, forKey: Self.animationKey)
+        case .attentionPulse:
+            let animation = CABasicAnimation(keyPath: "opacity")
+            animation.fromValue = 1
+            animation.toValue = Self.attentionPulseMinimumOpacity
+            // `autoreverses` plays the return leg, so half the cycle here.
+            animation.duration = Self.attentionPulseDuration / 2
+            animation.autoreverses = true
+            animation.repeatCount = .infinity
+            animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            animation.isRemovedOnCompletion = false
+            animation.beginTime = syncedBeginTime(duration: Self.attentionPulseDuration)
             contentLayer.add(animation, forKey: Self.animationKey)
         }
     }

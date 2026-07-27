@@ -80,7 +80,7 @@ extension ControlCommandCoordinator {
     nonisolated func sidebarReportPullRequest(_ args: String, context: (any ControlCommandContext)?) -> String {
         let parsed = sidebarParseOptions(args)
         guard parsed.positional.count >= 2 else {
-            return "ERROR: Missing pull request number or URL — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y]"
+            return "ERROR: Missing pull request number or URL — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--draft[=true|false]] [--branch=<name>] [--tab=X] [--panel=Y]"
         }
 
         let rawNumber = parsed.positional[0].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -101,13 +101,26 @@ extension ControlCommandCoordinator {
             return "ERROR: Invalid pull request state '\(statusRaw)' — use: open, merged, closed"
         }
         let branch = sidebarNormalizedOptionValue(parsed.options["branch"])
+        // Additive and orthogonal to `--state`: GitHub reports a draft PR as
+        // `open`, and `SidebarPullRequestStatus`'s raw values are a frozen wire
+        // format that must not grow a `draft` case.
+        let draftRaw = parsed.options["draft"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let isDraft: Bool
+        switch draftRaw {
+        case nil: isDraft = false
+        // A bare `--draft` parses to an empty value; treat it as the flag it looks like.
+        case "", "1", "true", "yes": isDraft = true
+        case "0", "false", "no": isDraft = false
+        default:
+            return "ERROR: Invalid pull request draft value '\(draftRaw ?? "")' — use: true, false"
+        }
         if sidebarNormalizedOptionValue(parsed.options["checks"]) != nil {
             return "ERROR: Unsupported option '--checks' — pull request checks are no longer tracked"
         }
 
         let labelRaw = sidebarNormalizedOptionValue(parsed.options["label"]) ?? "PR"
         guard !labelRaw.isEmpty else {
-            return "ERROR: Invalid review label — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y]"
+            return "ERROR: Invalid review label — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--draft[=true|false]] [--branch=<name>] [--tab=X] [--panel=Y]"
         }
         let label = String(labelRaw.prefix(16))
 
@@ -115,7 +128,7 @@ extension ControlCommandCoordinator {
         // Keep this telemetry path off-main so SwiftUI render passes can't deadlock the socket handler.
         let resolution = sidebarPanelMutationTarget(
             options: parsed.options,
-            missingPanelUsage: "report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y]"
+            missingPanelUsage: "report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--draft[=true|false]] [--branch=<name>] [--tab=X] [--panel=Y]"
         )
         guard let target = resolution.target else {
             return resolution.error ?? "ERROR: Tab not found"
@@ -126,7 +139,8 @@ extension ControlCommandCoordinator {
             label: label,
             url: url,
             statusRawValue: statusRaw,
-            branch: branch
+            branch: branch,
+            isDraft: isDraft
         )
         return "OK"
     }

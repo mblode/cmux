@@ -14,6 +14,9 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
     let mergedAt: String?
     let head: Ref
     let base: Ref?
+    /// GitHub omits `draft` on some payload shapes (and non-GitHub hosts never
+    /// send it), so this stays optional rather than breaking every fixture.
+    let draft: Bool?
 
     enum CodingKeys: String, CodingKey {
         case number
@@ -23,5 +26,6 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
         case mergedAt = "merged_at"
         case head
         case base
+        case draft
     }
 }

@@ -12,12 +12,22 @@ public struct WorkspacePullRequestResolvedItem: Sendable {
     public let statusRawValue: String
     /// The branch the PR was matched for.
     public let branch: String
+    /// Whether the PR is a draft. A sibling field rather than a status case:
+    /// the status raw values are a frozen control-socket wire format.
+    public let isDraft: Bool
 
     /// Creates a resolved item.
-    public init(number: Int, urlString: String, statusRawValue: String, branch: String) {
+    public init(
+        number: Int,
+        urlString: String,
+        statusRawValue: String,
+        branch: String,
+        isDraft: Bool = false
+    ) {
         self.number = number
         self.urlString = urlString
         self.statusRawValue = statusRawValue
         self.branch = branch
+        self.isDraft = isDraft
     }
 }

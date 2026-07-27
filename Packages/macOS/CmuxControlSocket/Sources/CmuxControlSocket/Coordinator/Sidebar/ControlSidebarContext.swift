@@ -192,7 +192,8 @@ public protocol ControlSidebarContext: AnyObject {
         label: String,
         url: URL,
         statusRawValue: String,
-        branch: String?
+        branch: String?,
+        isDraft: Bool
     )
 
     /// Enqueues the `clear_pr` panel pull-request clear.

@@ -564,6 +564,18 @@ struct SidebarStatusStyle {
         return SidebarStatusStyle(symbolName: "circle.fill", color: color(for: kind, colorScheme: colorScheme))
     }
 
+    /// Maps the resolved row state onto the same palette the free-text `Kind`
+    /// uses, so the glyph and any surviving status pill agree on colour.
+    static func color(for state: SidebarAgentStatusState, colorScheme: ColorScheme) -> NSColor {
+        switch state {
+        case .working: return SidebarStatusPalette.running(colorScheme)
+        case .needsAttention: return SidebarStatusPalette.needsInput(colorScheme)
+        case .idle: return SidebarStatusPalette.idle(colorScheme)
+        case .done: return SidebarStatusPalette.done(colorScheme)
+        case .error: return SidebarStatusPalette.error(colorScheme)
+        }
+    }
+
     static func color(for kind: Kind, colorScheme: ColorScheme) -> NSColor {
         switch kind {
         case .running: return SidebarStatusPalette.running(colorScheme)

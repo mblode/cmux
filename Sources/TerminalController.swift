@@ -619,7 +619,8 @@ class TerminalController {
         label: String,
         url: URL,
         status: SidebarPullRequestStatus,
-        branch: String?
+        branch: String?,
+        isDraft: Bool
     ) -> Bool {
         guard let current else { return true }
         let normalizedBranch = branch?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -630,7 +631,8 @@ class TerminalController {
             guard current.number == number,
                   current.label == label,
                   current.url == url,
-                  current.status == status else {
+                  current.status == status,
+                  current.isDraft == isDraft else {
                 return nil
             }
             return current.branch
@@ -640,6 +642,7 @@ class TerminalController {
             || current.url != url
             || current.status != status
             || current.branch != effectiveBranch
+            || current.isDraft != isDraft
             || current.isStale
     }
 
@@ -10889,7 +10892,7 @@ class TerminalController {
           clear_progress [--tab=X] - Clear progress bar
           report_git_branch <branch> [--status=dirty|clean|unknown] [--tab=X] [--panel=Y] - Report git branch
           clear_git_branch [--tab=X] [--panel=Y] - Clear git branch
-          report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y] - Report pull request / review item
+          report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--draft[=true|false]] [--branch=<name>] [--tab=X] [--panel=Y] - Report pull request / review item
           report_review <number> <url> [--label=MR] [--state=open|merged|closed] [--tab=X] [--panel=Y] - Alias for provider-specific review item
           clear_pr [--tab=X] [--panel=Y] - Clear pull request
           report_ports <port1> [port2...] [--tab=X] [--panel=Y] - Report listening ports

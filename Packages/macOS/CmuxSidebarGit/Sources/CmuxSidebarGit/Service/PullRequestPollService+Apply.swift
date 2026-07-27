@@ -107,7 +107,8 @@ extension PullRequestPollService {
                         url: url,
                         status: status,
                         branch: resolvedPullRequest.branch,
-                        isStale: false
+                        isStale: false,
+                        isDraft: resolvedPullRequest.isDraft
                     )
                 )
             case .notFound:
@@ -139,7 +140,10 @@ extension PullRequestPollService {
                             url: currentPullRequest.url,
                             status: currentPullRequest.status,
                             branch: currentPullRequest.branch,
-                            isStale: true
+                            isStale: true,
+                            // Carry the last known draft flag: a stale badge
+                            // must not silently promote a draft to ready.
+                            isDraft: currentPullRequest.isDraft
                         )
                     )
                 }

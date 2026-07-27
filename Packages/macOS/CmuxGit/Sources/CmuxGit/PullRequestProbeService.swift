@@ -173,7 +173,8 @@ public struct PullRequestProbeService: Sendable {
                         number: matchedPullRequest.number,
                         urlString: matchedPullRequest.url,
                         statusRawValue: status.rawValue,
-                        branch: candidate.branch
+                        branch: candidate.branch,
+                        isDraft: matchedPullRequest.isDraft
                     )
                 )
                 usedCachedRepoData = matchedPullRequestUsedCache

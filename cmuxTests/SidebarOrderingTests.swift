@@ -1180,8 +1180,35 @@ final class TerminalControllerSidebarDedupeTests: XCTestCase {
                 label: "PR",
                 url: url,
                 status: .open,
-                branch: "feature/work"
+                branch: "feature/work",
+                isDraft: false
             )
+        )
+    }
+
+    func testShouldReplacePullRequestWhenOnlyTheDraftFlagChanges() {
+        let url = URL(string: "https://github.com/manaflow-ai/cmux/pull/42")!
+        let current = SidebarPullRequestState(
+            number: 42,
+            label: "PR",
+            url: url,
+            status: .open,
+            branch: "feature/work",
+            isStale: false,
+            isDraft: true
+        )
+
+        XCTAssertTrue(
+            TerminalController.shouldReplacePullRequest(
+                current: current,
+                number: 42,
+                label: "PR",
+                url: url,
+                status: .open,
+                branch: "feature/work",
+                isDraft: false
+            ),
+            "Marking a draft ready for review leaves every other field identical, so the ordering guard must key on isDraft or the row keeps rendering a grey draft glyph."
         )
     }
 

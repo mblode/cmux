@@ -341,7 +341,8 @@ extension PullRequestProbeService {
             updatedAt: pullRequest.updatedAt,
             mergedAt: pullRequest.mergedAt,
             headRefName: pullRequest.head.ref,
-            baseRefName: pullRequest.base?.ref
+            baseRefName: pullRequest.base?.ref,
+            isDraft: pullRequest.draft ?? false
         )
     }
 

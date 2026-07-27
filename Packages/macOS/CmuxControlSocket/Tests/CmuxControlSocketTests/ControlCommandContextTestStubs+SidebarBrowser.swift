@@ -146,7 +146,8 @@ extension ControlSidebarContext {
         label: String,
         url: URL,
         statusRawValue: String,
-        branch: String?
+        branch: String?,
+        isDraft: Bool
     ) {}
 
     nonisolated func controlSidebarSchedulePanelPullRequestClear(target: ControlSidebarPanelMutationTarget) {}

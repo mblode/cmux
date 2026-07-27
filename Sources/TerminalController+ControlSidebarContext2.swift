@@ -116,7 +116,8 @@ extension TerminalController {
         label: String,
         url: URL,
         statusRawValue: String,
-        branch: String?
+        branch: String?,
+        isDraft: Bool
     ) {
         guard let status = SidebarPullRequestStatus(rawValue: statusRawValue) else {
             // Unreachable: the coordinator validates the state first.
@@ -134,7 +135,8 @@ extension TerminalController {
                 label: label,
                 url: url,
                 status: status,
-                branch: branch
+                branch: branch,
+                isDraft: isDraft
             ) else {
                 return
             }
@@ -145,7 +147,8 @@ extension TerminalController {
                 label: label,
                 url: url,
                 status: status,
-                branch: branch
+                branch: branch,
+                isDraft: isDraft
             )
         }
     }

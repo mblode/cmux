@@ -16,6 +16,14 @@ final class WorkspaceSidebarAgentRuntimeObservationModel {
     private(set) var agentPIDKeysByPanelId: [UUID: Set<String>] = [:]
     @ObservationIgnored
     private(set) var agentLifecycleStatesByPanelId: [UUID: [String: AgentHibernationLifecycleState]] = [:]
+    /// An agent finished here and the user has not been back since.
+    ///
+    /// Deliberately not derived from the lifecycle map: cmux *erases* an agent's
+    /// lifecycle and status the moment its process exits, so without a separate
+    /// latch a completed workspace is indistinguishable from one that never ran
+    /// anything. Ephemeral by design — a relaunch is a clean slate.
+    @ObservationIgnored
+    private(set) var hasUnseenAgentCompletion = false
     @ObservationIgnored
     private(set) var changeGeneration: UInt64 = 0
 
@@ -60,6 +68,12 @@ final class WorkspaceSidebarAgentRuntimeObservationModel {
     func setAgentLifecycleStatesByPanelId(_ newValue: [UUID: [String: AgentHibernationLifecycleState]]) {
         guard agentLifecycleStatesByPanelId != newValue else { return }
         agentLifecycleStatesByPanelId = newValue
+        notifyChanged()
+    }
+
+    func setHasUnseenAgentCompletion(_ newValue: Bool) {
+        guard hasUnseenAgentCompletion != newValue else { return }
+        hasUnseenAgentCompletion = newValue
         notifyChanged()
     }
 

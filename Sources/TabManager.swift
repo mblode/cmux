@@ -690,6 +690,10 @@ class TabManager: ObservableObject {
                 // Also clear stale notifications (e.g. "Doing well, thanks!")
                 // left behind when Claude was killed without SessionEnd firing.
                 AppDelegate.shared?.notificationStore?.clearNotifications(forTabId: tab.id)
+                // A reaped agent is finished work. Latch it so the row reads
+                // "done, unreviewed" instead of falling silent, since tearing
+                // the runtime down also erased its lifecycle and status.
+                tab.markAgentCompletionUnseen()
             }
         }
     }
@@ -3238,6 +3242,14 @@ class TabManager: ObservableObject {
         }
 
         notificationDismissal.setPendingSelectionContext(notificationDismissalContext)
+        // Visiting is the "seen" event for the done glyph. Both sides of the
+        // switch clear: arriving because you are looking at it now, and leaving
+        // because anything that finished while you were there was already in
+        // front of you.
+        if let outgoingTabId = selectedTabId {
+            workspacesById[outgoingTabId]?.clearUnseenAgentCompletion()
+        }
+        workspacesById[tabId]?.clearUnseenAgentCompletion()
         selectedTabId = tabId
     }
 

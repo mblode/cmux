@@ -15,19 +15,26 @@ enum SidebarAgentStatusResolver {
     ///    control-socket command. Covers `working` / `needsAttention` / `idle`.
     /// 2. **Free text** `SidebarStatusEntry` key/value pairs matched by
     ///    `SidebarStatusStyle.kind(forKey:value:)`. This is the only source for
-    ///    `done` and `error` — neither has a typed representation today, and
-    ///    inventing one here would mean guessing at agent intent.
+    ///    `error`, which has no typed representation today; inventing one here
+    ///    would mean guessing at agent intent.
+    /// 3. **The completion latch**, `hasUnseenAgentCompletion`. Without it
+    ///    `done` would be unreachable in practice: cmux erases an agent's
+    ///    lifecycle *and* its status entries when the process exits, so a
+    ///    finished workspace otherwise looks exactly like one that never ran
+    ///    anything. This is the single biggest source of glyphs at rest.
     ///
-    /// Union-then-rank rather than "typed wins" is the load-bearing choice: when
-    /// no panel reports a lifecycle, the result is identical to what the old
-    /// `rankedDotColor` produced from the same entries, so swapping the dot for
-    /// the glyph cannot regress an existing workspace. Adding typed states can
-    /// only raise the resolved priority, never lower it.
+    /// Union-then-rank rather than "typed wins": adding a source can only raise
+    /// the resolved priority, never lower it, so no signal can be masked by a
+    /// quieter one arriving later.
     static func state(
         lifecycleStatesByPanelId: [UUID: [String: AgentHibernationLifecycleState]],
-        statusEntries: [(key: String, value: String)]
+        statusEntries: [(key: String, value: String)],
+        hasUnseenAgentCompletion: Bool
     ) -> SidebarAgentStatusState? {
         var candidates = Set<SidebarAgentStatusState>()
+        if hasUnseenAgentCompletion {
+            candidates.insert(.done)
+        }
 
         for panelStates in lifecycleStatesByPanelId.values {
             for (key, lifecycle) in panelStates {
@@ -42,33 +49,36 @@ enum SidebarAgentStatusResolver {
         }
 
         for entry in statusEntries {
-            if let kind = SidebarStatusStyle.kind(forKey: entry.key, value: entry.value) {
-                candidates.insert(state(forKind: kind))
+            if let kind = SidebarStatusStyle.kind(forKey: entry.key, value: entry.value),
+               let state = state(forKind: kind) {
+                candidates.insert(state)
             }
         }
 
         return SidebarAgentStatusState.displayPriority.first { candidates.contains($0) }
     }
 
-    /// `.unknown` contributes nothing: an agent that has registered but not yet
-    /// reported is not a state worth a glyph, and treating it as `idle` would
-    /// light up every row at launch.
+    /// `.unknown` and `.idle` both contribute nothing. Unknown is an agent that
+    /// registered but has not reported — treating it as a state would light up
+    /// every row at launch. Idle is a live process doing nothing, which is not a
+    /// reason to click, so it reads the same as a blank row.
     static func state(forLifecycle lifecycle: AgentHibernationLifecycleState) -> SidebarAgentStatusState? {
         switch lifecycle {
         case .running: return .working
         case .needsInput: return .needsAttention
-        case .idle: return .idle
-        case .unknown: return nil
+        case .idle, .unknown: return nil
         }
     }
 
-    static func state(forKind kind: SidebarStatusStyle.Kind) -> SidebarAgentStatusState {
+    /// Free-text `idle`-family words ("paused", "waiting", "hibernating") map to
+    /// nothing for the same reason the typed `.idle` does.
+    static func state(forKind kind: SidebarStatusStyle.Kind) -> SidebarAgentStatusState? {
         switch kind {
         case .error: return .error
         case .needsInput: return .needsAttention
         case .running: return .working
-        case .idle: return .idle
         case .done: return .done
+        case .idle: return nil
         }
     }
 }

@@ -570,7 +570,6 @@ struct SidebarStatusStyle {
         switch state {
         case .working: return SidebarStatusPalette.running(colorScheme)
         case .needsAttention: return SidebarStatusPalette.needsInput(colorScheme)
-        case .idle: return SidebarStatusPalette.idle(colorScheme)
         case .done: return SidebarStatusPalette.done(colorScheme)
         case .error: return SidebarStatusPalette.error(colorScheme)
         }

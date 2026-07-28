@@ -726,7 +726,6 @@
 		5B11E5A100000000000000C3 /* SidebarAgentStatusResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B11E5A100000000000000C4 /* SidebarAgentStatusResolver.swift */; };
 		5B11E5A100000000000000C5 /* SidebarAgentStatusGlyphMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B11E5A100000000000000C6 /* SidebarAgentStatusGlyphMetrics.swift */; };
 		5B11E5A100000000000000C7 /* SidebarAgentStatusGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B11E5A100000000000000C8 /* SidebarAgentStatusGlyph.swift */; };
-		5B11E5A100000000000000D1 /* SidebarPullRequestPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B11E5A100000000000000D2 /* SidebarPullRequestPalette.swift */; };
 		5B11E5A100000000000000D3 /* SidebarPullRequestRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B11E5A100000000000000D4 /* SidebarPullRequestRowView.swift */; };
 		5B11E5A100000000000000B1 /* GPUSpinner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B11E5A100000000000000B2 /* GPUSpinner.swift */; };
 		A6AC72010000000000000001 /* GPUSpinnerNSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6AC72010000000000000002 /* GPUSpinnerNSView.swift */; };
@@ -1189,7 +1188,7 @@
 			988C6A036BA56EA5759A95A0 /* SidebarWorkspaceSnapshotRefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50D9BCE46701FBA91C2EFB6 /* SidebarWorkspaceSnapshotRefreshPolicy.swift */; };
 			A1D0000000000000000A0001 /* SidebarAgentStatusResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0001 /* SidebarAgentStatusResolverTests.swift */; };
 			A1D0000000000000000A0002 /* SidebarAgentStatusGlyphMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0002 /* SidebarAgentStatusGlyphMetricsTests.swift */; };
-			A1D0000000000000000A0003 /* SidebarPullRequestPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0003 /* SidebarPullRequestPaletteTests.swift */; };
+			A1D0000000000000000A0004 /* SidebarStatusGlyphVocabularyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0004 /* SidebarStatusGlyphVocabularyTests.swift */; };
 			62270F3DCECB4787D789CCE3 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */; };
 			C9A57601C9A57601C9A57601 /* SidebarWorkspaceTopDropIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A57602C9A57602C9A57602 /* SidebarWorkspaceTopDropIndicator.swift */; };
 			C7B0000000000000000000F2 /* SleepyAgentCensus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B0000000000000000000F1 /* SleepyAgentCensus.swift */; };
@@ -2271,7 +2270,6 @@
 		5B11E5A100000000000000C4 /* SidebarAgentStatusResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarAgentStatusResolver.swift; sourceTree = "<group>"; };
 		5B11E5A100000000000000C6 /* SidebarAgentStatusGlyphMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarAgentStatusGlyphMetrics.swift; sourceTree = "<group>"; };
 		5B11E5A100000000000000C8 /* SidebarAgentStatusGlyph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarAgentStatusGlyph.swift; sourceTree = "<group>"; };
-		5B11E5A100000000000000D2 /* SidebarPullRequestPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarPullRequestPalette.swift; sourceTree = "<group>"; };
 		5B11E5A100000000000000D4 /* SidebarPullRequestRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarPullRequestRowView.swift; sourceTree = "<group>"; };
 		5B11E5A100000000000000B2 /* GPUSpinner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/GPUSpinner.swift; sourceTree = "<group>"; };
 		A6AC72010000000000000002 /* GPUSpinnerNSView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/GPUSpinnerNSView.swift; sourceTree = "<group>"; };
@@ -2723,7 +2721,7 @@
 			D50D9BCE46701FBA91C2EFB6 /* SidebarWorkspaceSnapshotRefreshPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarWorkspaceSnapshotRefreshPolicy.swift; sourceTree = "<group>"; };
 			A1D0000000000000000B0001 /* SidebarAgentStatusResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarAgentStatusResolverTests.swift; sourceTree = "<group>"; };
 			A1D0000000000000000B0002 /* SidebarAgentStatusGlyphMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarAgentStatusGlyphMetricsTests.swift; sourceTree = "<group>"; };
-			A1D0000000000000000B0003 /* SidebarPullRequestPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarPullRequestPaletteTests.swift; sourceTree = "<group>"; };
+			A1D0000000000000000B0004 /* SidebarStatusGlyphVocabularyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarStatusGlyphVocabularyTests.swift; sourceTree = "<group>"; };
 			F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceSnapshotRefreshPolicyTests.swift; sourceTree = "<group>"; };
 			C9A57602C9A57602C9A57602 /* SidebarWorkspaceTopDropIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceTopDropIndicator.swift; sourceTree = "<group>"; };
 			C7B0000000000000000000F1 /* SleepyAgentCensus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepyAgentCensus.swift; sourceTree = "<group>"; };
@@ -3449,7 +3447,6 @@
 						5B11E5A100000000000000C4 /* SidebarAgentStatusResolver.swift */,
 						5B11E5A100000000000000C6 /* SidebarAgentStatusGlyphMetrics.swift */,
 						5B11E5A100000000000000C8 /* SidebarAgentStatusGlyph.swift */,
-						5B11E5A100000000000000D2 /* SidebarPullRequestPalette.swift */,
 						5B11E5A100000000000000D4 /* SidebarPullRequestRowView.swift */,
 						5B11E5A100000000000000B2 /* GPUSpinner.swift */,
 					A6AC72010000000000000002 /* GPUSpinnerNSView.swift */,
@@ -4502,7 +4499,7 @@
 				CE7000000000000000000002 /* ClaudeWrapperResumeEnvironmentTests.swift */,
 				A1D0000000000000000B0001 /* SidebarAgentStatusResolverTests.swift */,
 				A1D0000000000000000B0002 /* SidebarAgentStatusGlyphMetricsTests.swift */,
-				A1D0000000000000000B0003 /* SidebarPullRequestPaletteTests.swift */,
+				A1D0000000000000000B0004 /* SidebarStatusGlyphVocabularyTests.swift */,
 				F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */,
 				C9A57514C9A57514C9A57514 /* SidebarScrollViewConfiguratorTests.swift */,
 				C9A57506C9A57506C9A57506 /* SidebarWorkspaceScrollLayoutTests.swift */,
@@ -5535,7 +5532,6 @@
 					5B11E5A100000000000000C3 /* SidebarAgentStatusResolver.swift in Sources */,
 					5B11E5A100000000000000C5 /* SidebarAgentStatusGlyphMetrics.swift in Sources */,
 					5B11E5A100000000000000C7 /* SidebarAgentStatusGlyph.swift in Sources */,
-					5B11E5A100000000000000D1 /* SidebarPullRequestPalette.swift in Sources */,
 					5B11E5A100000000000000D3 /* SidebarPullRequestRowView.swift in Sources */,
 					5B11E5A100000000000000B1 /* GPUSpinner.swift in Sources */,
 					A6AC72010000000000000001 /* GPUSpinnerNSView.swift in Sources */,
@@ -6534,7 +6530,7 @@
 				C0DE56010000000000000001 /* SidebarWorkspaceSelectionAnchorPolicyTests.swift in Sources */,
 					A1D0000000000000000A0001 /* SidebarAgentStatusResolverTests.swift in Sources */,
 					A1D0000000000000000A0002 /* SidebarAgentStatusGlyphMetricsTests.swift in Sources */,
-					A1D0000000000000000A0003 /* SidebarPullRequestPaletteTests.swift in Sources */,
+					A1D0000000000000000A0004 /* SidebarStatusGlyphVocabularyTests.swift in Sources */,
 					62270F3DCECB4787D789CCE3 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift in Sources */,
 				5830CA11BAC0000000000002 /* SocketCallbackAwaiterMainThreadTests.swift in Sources */,
 						F8000000A1B2C3D4E5F60718 /* SocketControlPasswordStoreTests.swift in Sources */,

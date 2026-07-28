@@ -13,11 +13,13 @@ import Testing
 
     private static func resolve(
         lifecycles: [UUID: [String: AgentHibernationLifecycleState]] = [:],
-        entries: [(key: String, value: String)] = []
+        entries: [(key: String, value: String)] = [],
+        completed: Bool = false
     ) -> SidebarAgentStatusState? {
         SidebarAgentStatusResolver.state(
             lifecycleStatesByPanelId: lifecycles,
-            statusEntries: entries
+            statusEntries: entries,
+            hasUnseenAgentCompletion: completed
         )
     }
 
@@ -42,7 +44,32 @@ import Testing
     @Test func typedLifecycleResolvesWithoutAnyStatusText() {
         #expect(Self.resolve(lifecycles: [Self.panelA: ["claude_code": .running]]) == .working)
         #expect(Self.resolve(lifecycles: [Self.panelA: ["claude_code": .needsInput]]) == .needsAttention)
-        #expect(Self.resolve(lifecycles: [Self.panelA: ["claude_code": .idle]]) == .idle)
+    }
+
+    /// The glyph column is an inbox. An agent sitting idle is not a reason to
+    /// click, so it reads the same as a row with no agent at all.
+    @Test func idleEarnsNoGlyph() {
+        #expect(Self.resolve(lifecycles: [Self.panelA: ["claude_code": .idle]]) == nil)
+        #expect(Self.resolve(entries: [(key: "agent", value: "paused")]) == nil)
+        #expect(Self.resolve(entries: [(key: "agent", value: "hibernating")]) == nil)
+    }
+
+    /// Without the completion latch `done` is unreachable: cmux erases an
+    /// agent's lifecycle and status entries when its process exits, so a
+    /// finished workspace looks identical to one that never ran anything.
+    @Test func completionLatchIsWhatMakesDoneReachable() {
+        #expect(Self.resolve(completed: true) == .done)
+        #expect(Self.resolve(completed: false) == nil)
+    }
+
+    @Test func liveWorkOutranksAPriorCompletion() {
+        #expect(
+            Self.resolve(lifecycles: [Self.panelA: ["claude_code": .running]], completed: true) == .working,
+            "A workspace that finished one agent and started another is working, not done."
+        )
+        #expect(
+            Self.resolve(lifecycles: [Self.panelA: ["claude_code": .needsInput]], completed: true) == .needsAttention
+        )
     }
 
     @Test func manualLoadingKeyIsExcluded() {
@@ -93,16 +120,17 @@ import Testing
         #expect(
             Self.resolve(entries: [
                 (key: "fleet", value: "done"),
-                (key: "claude_code", value: "idle"),
-            ]) == .idle
+                (key: "build", value: "failed"),
+            ]) == .error
         )
     }
 
-    /// The load-bearing anti-regression test for replacing the free-text dot.
+    /// Anti-regression for replacing the free-text dot: with no typed lifecycle
+    /// present, every recognized word must still land on exactly the colour the
+    /// old `rankedDotColor` produced.
     ///
-    /// With no typed lifecycle present, the resolver must land on exactly the
-    /// colour the old `rankedDotColor` produced for the same entries. If this
-    /// fails, existing workspaces changed colour when the glyph shipped.
+    /// The idle family is excluded by design — those words used to draw an amber
+    /// dot and now draw nothing, which is the one intentional break.
     @Test(arguments: [ColorScheme.light, ColorScheme.dark])
     func matchesLegacyRankedDotColorWhenNoLifecycleIsReported(scheme: ColorScheme) {
         let vocabulary: [(key: String, value: String)] = [
@@ -113,8 +141,6 @@ import Testing
             ("agent", "waiting for you"), ("agent", "your turn"),
             ("fleet", "done"), ("task", "complete"), ("task", "finished"),
             ("pr", "merged"), ("build", "success"), ("pr", "ready"),
-            ("agent", "idle"), ("agent", "paused"), ("agent", "waiting"),
-            ("agent", "hibernating"), ("agent", "sleep"), ("agent", "stopped"),
             ("agent", "running"), ("agent", "working"), ("agent", "in progress"),
             ("agent", "streaming"), ("agent", "thinking"), ("agent", "building"),
             ("agent", "active"),

@@ -8,12 +8,15 @@ import SwiftUI
 /// readable at 100% greyscale (WCAG 1.4.1) and survives a colourblind palette
 /// swap without restructuring. This replaced a set of five recoloured dots.
 ///
-/// Motion policy: `needsAttention` is the only animated element in the sidebar.
-/// That inverts the usual convention — Claude Code, Conductor and Linear animate
-/// the *ambient working* state and keep blocking states loud but still — and is
-/// a deliberate product decision, not an oversight. `working` renders a static
-/// wedge; do not add a spinner to it.
+/// Motion policy: `needsAttention` is the only animated element in the sidebar,
+/// because it is the only state where the work has stopped and cannot resume
+/// until you act. That inverts the usual convention — Claude Code, Conductor and
+/// Linear animate the *ambient working* state — and is a deliberate product
+/// decision, not an oversight. `working` renders a static wedge and `done` a
+/// static check; do not add motion to either.
 struct SidebarAgentStatusGlyph: View {
+    static let workingGlyphOpacity: Double = 0.55
+
     let state: SidebarAgentStatusState
     let metrics: SidebarAgentStatusGlyphMetrics
     let color: NSColor
@@ -40,10 +43,11 @@ struct SidebarAgentStatusGlyph: View {
         case .done:
             symbol("checkmark.circle.fill")
         case .working:
+            // Recessive on purpose: a running agent is the one state you cannot
+            // act on, so it must not compete with the three that want you.
             SidebarAgentWorkingWedge(lineWidth: metrics.side * 0.11)
                 .foregroundColor(Color(nsColor: color))
-        case .idle:
-            symbol("circle.dashed")
+                .opacity(Self.workingGlyphOpacity)
         }
     }
 

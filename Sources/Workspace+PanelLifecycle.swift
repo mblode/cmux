@@ -35,6 +35,24 @@ extension Workspace {
         set { sidebarAgentRuntimeObservation.setAgentLifecycleStatesByPanelId(newValue) }
     }
 
+    /// Whether an agent finished here since the user last looked.
+    ///
+    /// Set when an agent runtime is torn down (clean `SessionEnd` or a reaped
+    /// dead process), cleared when the user arrives at or leaves this workspace.
+    /// Leaving counts as seen: if the agent finished while you were watching,
+    /// you already saw it and the row should not nag on your way out.
+    var hasUnseenAgentCompletion: Bool {
+        sidebarAgentRuntimeObservation.hasUnseenAgentCompletion
+    }
+
+    func markAgentCompletionUnseen() {
+        sidebarAgentRuntimeObservation.setHasUnseenAgentCompletion(true)
+    }
+
+    func clearUnseenAgentCompletion() {
+        sidebarAgentRuntimeObservation.setHasUnseenAgentCompletion(false)
+    }
+
     func agentRuntimeState(forPanelId panelId: UUID) -> DetachedAgentRuntimeState? {
         let pidKeys = agentPIDKeysByPanelId[panelId] ?? []
 

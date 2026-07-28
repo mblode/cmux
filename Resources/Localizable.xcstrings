@@ -197530,13 +197530,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Done"
+            "value" : "Finished — not reviewed yet"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完了"
+            "value" : "完了 — 未確認"
           }
         }
       }
@@ -197554,23 +197554,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "エラー"
-          }
-        }
-      }
-    },
-    "sidebar.agentStatus.idle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Idle"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "待機中"
           }
         }
       }

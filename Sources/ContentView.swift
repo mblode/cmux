@@ -13702,31 +13702,25 @@ struct TabItemView: View, Equatable {
                 // regardless of pin / media / unread — focusing a row clears its
                 // unread count, which used to sit before the dot and shift it.
                 //
-                // The footprint is reserved even with no status so titles align
-                // across every row and an agent coming online doesn't re-truncate
-                // the title next to it. Crucially the box is identical in all
-                // states, so a transition can never change the row's height —
-                // see the animation prohibition further down this body.
-                let agentStatusMetrics = SidebarAgentStatusGlyphMetrics.metrics(
-                    for: workspaceSnapshot.agentStatusState,
-                    fontScale: fontScale
-                )
-                Group {
-                    if let agentStatusState = workspaceSnapshot.agentStatusState {
-                        SidebarAgentStatusGlyph(
-                            state: agentStatusState,
-                            metrics: agentStatusMetrics,
-                            color: agentStatusGlyphColor(for: agentStatusState),
-                            label: agentStatusState.localizedLabel
-                        )
-                    } else {
-                        Color.clear
-                            .frame(width: agentStatusMetrics.side, height: agentStatusMetrics.side)
-                            .accessibilityHidden(true)
-                    }
+                // Most rows have nothing to say and collapse to no indent at
+                // all, which is the point: a column with a glyph on every row
+                // conveys nothing. State onset shifts the title horizontally,
+                // never vertically, so this cannot trigger the row-height
+                // hazard the animation prohibition below guards against.
+                if let agentStatusState = workspaceSnapshot.agentStatusState {
+                    let agentStatusMetrics = SidebarAgentStatusGlyphMetrics.metrics(
+                        for: agentStatusState,
+                        fontScale: fontScale
+                    )
+                    SidebarAgentStatusGlyph(
+                        state: agentStatusState,
+                        metrics: agentStatusMetrics,
+                        color: agentStatusGlyphColor(for: agentStatusState),
+                        label: agentStatusState.localizedLabel
+                    )
+                    .padding(.top, agentStatusMetrics.topPadding)
+                    .padding(.trailing, agentStatusMetrics.trailingPadding)
                 }
-                .padding(.top, agentStatusMetrics.topPadding)
-                .padding(.trailing, agentStatusMetrics.trailingPadding)
 
                 if workspaceSnapshot.isPinned {
                     BlodeIconImage(name: "BlodePin", size: scaledFontSize(10))
@@ -13854,10 +13848,18 @@ struct TabItemView: View, Equatable {
             remoteWorkspaceSection
 
             if detailVisibility.showsMetadata {
-                // Recognized statuses become the leading title dot, so drop
-                // their redundant text rows here (keep any unrecognized ones).
-                let metadataEntries = workspaceSnapshot.metadataEntries.filter {
-                    SidebarStatusStyle.kind(forKey: $0.key, value: $0.value) == nil
+                // A status that became the leading glyph must not also print its
+                // text ("fleet:done" next to a check says the same thing twice).
+                //
+                // Keyed off the resolver, not `SidebarStatusStyle.kind`: the two
+                // disagree on the idle family, which `kind` still recognizes but
+                // which earns no glyph. Filtering on `kind` would delete those
+                // rows and put nothing in their place.
+                let metadataEntries = workspaceSnapshot.metadataEntries.filter { entry in
+                    guard let kind = SidebarStatusStyle.kind(forKey: entry.key, value: entry.value) else {
+                        return true
+                    }
+                    return SidebarAgentStatusResolver.state(forKind: kind) == nil
                 }
                 let metadataBlocks = workspaceSnapshot.metadataBlocks
                 if !metadataEntries.isEmpty {
@@ -14032,7 +14034,7 @@ struct TabItemView: View, Equatable {
                             isClickable: settings.makesPullRequestsClickable,
                             fontSize: scaledFontSize(11),
                             font: magnifiedFont(scaledFontSize(11), weight: .medium),
-                            color: pullRequestGlyphColor(for: pullRequest.presentation),
+                            color: pullRequestForegroundColor,
                             openLink: { openPullRequestLink($0) }
                         )
                         .equatable()
@@ -14895,7 +14897,8 @@ struct TabItemView: View, Equatable {
             // piggyback on.
             agentStatusState: SidebarAgentStatusResolver.state(
                 lifecycleStatesByPanelId: tab.agentLifecycleStatesByPanelId,
-                statusEntries: statusEntries.map { (key: $0.key, value: $0.value) }
+                statusEntries: statusEntries.map { (key: $0.key, value: $0.value) },
+                hasUnseenAgentCompletion: tab.hasUnseenAgentCompletion
             ),
             metadataEntries: detailVisibility.showsMetadata ? statusEntries : [],
             metadataBlocks: detailVisibility.showsMetadata ? tab.sidebarMetadataBlocksInDisplayOrder() : [],
@@ -15059,22 +15062,19 @@ struct TabItemView: View, Equatable {
         }
     }
 
-    /// Semantic status colours are dropped on a solid-fill selected row, where
-    /// the background is the accent and white-on-accent is the only legible
-    /// foreground. This costs nothing in meaning: both glyph families encode
-    /// their state in the shape, so one row rendered monochrome still reads.
+    private var pullRequestForegroundColor: Color {
+        isActive ? activeSecondaryColor(0.75) : .secondary
+    }
+
+    /// Semantic colour is dropped on a solid-fill selected row, where the
+    /// background is the accent and white-on-accent is the only legible
+    /// foreground. This costs nothing in meaning: the glyph encodes its state in
+    /// the shape, so one row rendered monochrome still reads.
     private func agentStatusGlyphColor(for state: SidebarAgentStatusState) -> NSColor {
         guard !usesInvertedActiveForeground else {
             return selectedWorkspaceForegroundNSColor(opacity: 0.9)
         }
         return SidebarStatusStyle.color(for: state, colorScheme: colorScheme)
-    }
-
-    private func pullRequestGlyphColor(for presentation: SidebarPullRequestPresentation) -> NSColor {
-        guard !usesInvertedActiveForeground else {
-            return selectedWorkspaceForegroundNSColor(opacity: 0.75)
-        }
-        return SidebarPullRequestPalette.color(for: presentation, colorScheme: colorScheme)
     }
 
     private func openPullRequestLink(_ url: URL) {

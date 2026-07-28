@@ -68,7 +68,11 @@ extension TerminalController: ControlSidebarContext {
     nonisolated func controlSidebarScheduleStatusClear(target: ControlSidebarTabTarget, key: String) {
         controlSidebarScheduleMutation(target: target) { _, tab in
             _ = tab.statusEntries.removeValue(forKey: key)
-            tab.clearAgentPID(key: key)
+            // A true return means an agent runtime was actually torn down (the
+            // SessionEnd hook path), not just an unrelated status key cleared.
+            if tab.clearAgentPID(key: key) {
+                tab.markAgentCompletionUnseen()
+            }
         }
     }
 

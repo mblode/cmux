@@ -1,4 +1,3 @@
-import AppKit
 import CmuxSidebar
 import SwiftUI
 
@@ -10,6 +9,11 @@ import SwiftUI
 ///
 /// Glyph and text hold `fontSize` in every state, so a PR transitioning from
 /// open to merged can never change the row's height.
+///
+/// Intentionally monochrome. A PR being merged or closed is not something you
+/// can act on, so colouring it would spend an attention channel that belongs to
+/// the agent glyph — the one thing in the row that does want you. The four
+/// silhouettes carry the state on their own.
 struct SidebarPullRequestRowView: View, Equatable {
     let number: Int
     let label: String
@@ -19,7 +23,7 @@ struct SidebarPullRequestRowView: View, Equatable {
     let isClickable: Bool
     let fontSize: CGFloat
     let font: Font
-    let color: NSColor
+    let color: Color
     let openLink: (URL) -> Void
 
     nonisolated static func == (lhs: SidebarPullRequestRowView, rhs: SidebarPullRequestRowView) -> Bool {
@@ -67,7 +71,7 @@ struct SidebarPullRequestRowView: View, Equatable {
     }
 
     var body: some View {
-        let foreground = Color(nsColor: color)
+        let foreground = color
         let content = HStack(spacing: 5) {
             BlodeIconImage(name: Self.iconName(presentation), size: fontSize)
             Text("#\(String(number))").lineLimit(1).truncationMode(.tail)

@@ -39,7 +39,7 @@ struct SidebarAgentStatusGlyphMetrics: Equatable {
     /// state forces a decision here rather than silently inheriting a size.
     static func metrics(for state: SidebarAgentStatusState?, fontScale: CGFloat) -> Self {
         switch state {
-        case .error, .needsAttention, .working, .idle, .done, nil:
+        case .error, .needsAttention, .working, .done, nil:
             return Self(fontScale: fontScale)
         }
     }

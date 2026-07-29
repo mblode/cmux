@@ -24630,6 +24630,19 @@ struct CMUXCLI {
                 meta: notifyCategory.metaSegment(pending: notifyPending)
             )
 
+            // Only a genuinely blocked agent is "needs input". A finished turn
+            // and the idle nag are both "alive at the prompt with nothing to
+            // do", which is what `.idle` means — and what the generic (non-
+            // Claude) agent hooks have always reported for the same situation.
+            //
+            // This distinction is load-bearing for the sidebar: needs-input is
+            // the one state that pulses, and reporting it for every completed
+            // turn made the whole fleet pulse at rest. The app latches the
+            // running -> idle transition into the "done, unreviewed" glyph,
+            // which clears when the user visits the workspace.
+            let reportedLifecycle: AgentHibernationLifecycleState =
+                notifyCategory == .needsPermission ? .needsInput : .idle
+
             if let sessionId = parsedInput.sessionId, !suppressNeedsInputState {
                 try? sessionStore.upsert(
                     sessionId: sessionId,
@@ -24637,7 +24650,7 @@ struct CMUXCLI {
                     surfaceId: surfaceId,
                     cwd: parsedInput.cwd,
                     transcriptPath: parsedInput.transcriptPath,
-                    agentLifecycle: .needsInput,
+                    agentLifecycle: reportedLifecycle,
                     lastSubtitle: summary.subtitle,
                     lastBody: summary.body
                 )
@@ -24647,18 +24660,24 @@ struct CMUXCLI {
                 setAgentLifecycle(
                     client: client,
                     key: Self.claudeCodeStatusKey,
-                    lifecycle: .needsInput,
+                    lifecycle: reportedLifecycle,
                     workspaceId: workspaceId,
                     surfaceId: surfaceId
                 )
-                _ = try? setClaudeStatus(
-                    client: client,
-                    workspaceId: workspaceId,
-                    surfaceId: surfaceId,
-                    value: "Needs input",
-                    icon: "bell.fill",
-                    color: "#4C8DFF", pid: claudePid
-                )
+                if reportedLifecycle == .needsInput {
+                    _ = try? setClaudeStatus(
+                        client: client,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
+                        value: "Needs input",
+                        icon: "bell.fill",
+                        color: "#4C8DFF", pid: claudePid
+                    )
+                }
+                // No status pill for the idle case on purpose. `clear_status`
+                // would also tear down the agent PID record, which Claude still
+                // owns while it sits at its prompt; the app drops the stale pill
+                // itself when it latches the completion.
             }
             let response = try sendV1Command("notify_target_async \(workspaceId) \(surfaceId) \(payload)", client: client)
             print(response)

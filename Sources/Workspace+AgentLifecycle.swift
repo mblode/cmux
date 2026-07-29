@@ -8,8 +8,29 @@ extension Workspace {
     ) {
         let targetPanelId = panelId ?? focusedPanelId
         guard let targetPanelId, panels[targetPanelId] != nil else { return }
+        let previous = agentLifecycleStatesByPanelId[targetPanelId]?[key]
         agentLifecycleStatesByPanelId[targetPanelId, default: [:]][key] = lifecycle
         if !AgentHibernationLifecycleStatusKeys.isManualKey(key) {
+            // An agent that was doing something and now isn't has finished a
+            // turn. That is the same event as a process exiting, so latch it the
+            // same way — this is what puts a "done, unreviewed" check on rows
+            // whose agent is still alive at its prompt, which is the common case.
+            //
+            // Transitions out of `.unknown` are startup, not completion, and a
+            // no-op re-report of `.idle` is not a new turn.
+            if lifecycle == .idle,
+               let previous,
+               previous != .idle,
+               previous != .unknown {
+                markAgentCompletionUnseen()
+                // Retire the agent's own pill in the same breath. It still reads
+                // "Running" (or "Needs input") from the turn that just ended, and
+                // a stale pill would out-rank the completion in the resolver and
+                // print a contradicting line under the glyph. Only this agent's
+                // key is touched — user statuses set via `cmux set-status` are
+                // not the agent's to clear.
+                statusEntries.removeValue(forKey: key)
+            }
             recordAgentLifecycleChange(panelId: targetPanelId)
         }
     }

@@ -1189,6 +1189,7 @@
 			A1D0000000000000000A0001 /* SidebarAgentStatusResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0001 /* SidebarAgentStatusResolverTests.swift */; };
 			A1D0000000000000000A0002 /* SidebarAgentStatusGlyphMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0002 /* SidebarAgentStatusGlyphMetricsTests.swift */; };
 			A1D0000000000000000A0004 /* SidebarStatusGlyphVocabularyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0004 /* SidebarStatusGlyphVocabularyTests.swift */; };
+			A1D0000000000000000A0005 /* SidebarAgentCompletionLatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D0000000000000000B0005 /* SidebarAgentCompletionLatchTests.swift */; };
 			62270F3DCECB4787D789CCE3 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */; };
 			C9A57601C9A57601C9A57601 /* SidebarWorkspaceTopDropIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A57602C9A57602C9A57602 /* SidebarWorkspaceTopDropIndicator.swift */; };
 			C7B0000000000000000000F2 /* SleepyAgentCensus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B0000000000000000000F1 /* SleepyAgentCensus.swift */; };
@@ -2722,6 +2723,7 @@
 			A1D0000000000000000B0001 /* SidebarAgentStatusResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarAgentStatusResolverTests.swift; sourceTree = "<group>"; };
 			A1D0000000000000000B0002 /* SidebarAgentStatusGlyphMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarAgentStatusGlyphMetricsTests.swift; sourceTree = "<group>"; };
 			A1D0000000000000000B0004 /* SidebarStatusGlyphVocabularyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarStatusGlyphVocabularyTests.swift; sourceTree = "<group>"; };
+			A1D0000000000000000B0005 /* SidebarAgentCompletionLatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarAgentCompletionLatchTests.swift; sourceTree = "<group>"; };
 			F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceSnapshotRefreshPolicyTests.swift; sourceTree = "<group>"; };
 			C9A57602C9A57602C9A57602 /* SidebarWorkspaceTopDropIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceTopDropIndicator.swift; sourceTree = "<group>"; };
 			C7B0000000000000000000F1 /* SleepyAgentCensus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepyAgentCensus.swift; sourceTree = "<group>"; };
@@ -4500,6 +4502,7 @@
 				A1D0000000000000000B0001 /* SidebarAgentStatusResolverTests.swift */,
 				A1D0000000000000000B0002 /* SidebarAgentStatusGlyphMetricsTests.swift */,
 				A1D0000000000000000B0004 /* SidebarStatusGlyphVocabularyTests.swift */,
+				A1D0000000000000000B0005 /* SidebarAgentCompletionLatchTests.swift */,
 				F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */,
 				C9A57514C9A57514C9A57514 /* SidebarScrollViewConfiguratorTests.swift */,
 				C9A57506C9A57506C9A57506 /* SidebarWorkspaceScrollLayoutTests.swift */,
@@ -6531,6 +6534,7 @@
 					A1D0000000000000000A0001 /* SidebarAgentStatusResolverTests.swift in Sources */,
 					A1D0000000000000000A0002 /* SidebarAgentStatusGlyphMetricsTests.swift in Sources */,
 					A1D0000000000000000A0004 /* SidebarStatusGlyphVocabularyTests.swift in Sources */,
+					A1D0000000000000000A0005 /* SidebarAgentCompletionLatchTests.swift in Sources */,
 					62270F3DCECB4787D789CCE3 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift in Sources */,
 				5830CA11BAC0000000000002 /* SocketCallbackAwaiterMainThreadTests.swift in Sources */,
 						F8000000A1B2C3D4E5F60718 /* SocketControlPasswordStoreTests.swift in Sources */,
